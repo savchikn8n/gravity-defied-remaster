@@ -1,0 +1,221 @@
+import Matter from 'matter-js';
+import type { InputState, Vec2 } from './types';
+
+const { Bodies, Body, Composite, Constraint, Events } = Matter;
+
+const CAT_BIKE = 0x0002;
+const CAT_GROUND = 0x0001;
+const CAT_HEAD = 0x0004;
+
+export interface BikeConfig {
+  spawn: Vec2;
+}
+
+/**
+ * Two-wheel bike with chassis + rider. Designed to feel close to the
+ * Gravity Defied original: rear wheel drives, both can lift, bike crashes
+ * when the rider's helmet contacts the ground.
+ */
+export class Bike {
+  composite: Matter.Composite;
+  chassis: Matter.Body;
+  rearWheel: Matter.Body;
+  frontWheel: Matter.Body;
+  head: Matter.Body;
+  rearAxle: Matter.Constraint;
+  frontAxle: Matter.Constraint;
+  headJoint: Matter.Constraint;
+
+  /** Wheel-radius for rendering. Must match Matter circle radius. */
+  readonly wheelR = 18;
+  /** Half-length of chassis, for rendering. */
+  readonly chassisHalf = { w: 42, h: 7 };
+
+  rearOnGround = false;
+  frontOnGround = false;
+  crashed = false;
+
+  constructor(cfg: BikeConfig, private engine: Matter.Engine) {
+    const { x, y } = cfg.spawn;
+
+    this.chassis = Bodies.rectangle(x, y, 84, 14, {
+      density: 0.0018,
+      friction: 0.05,
+      frictionAir: 0.005,
+      collisionFilter: { category: CAT_BIKE, mask: CAT_GROUND },
+      label: 'chassis',
+    });
+
+    const wheelOpts: Matter.IBodyDefinition = {
+      density: 0.006,
+      friction: 1.1,
+      frictionStatic: 1.6,
+      restitution: 0.05,
+      collisionFilter: { category: CAT_BIKE, mask: CAT_GROUND },
+    };
+
+    this.rearWheel = Bodies.circle(x - 32, y + 18, this.wheelR, { ...wheelOpts, label: 'rearWheel' });
+    this.frontWheel = Bodies.circle(x + 32, y + 18, this.wheelR, { ...wheelOpts, label: 'frontWheel' });
+
+    // Helmet: small sensor body above the rider, kinematically attached to chassis.
+    this.head = Bodies.circle(x + 6, y - 26, 9, {
+      density: 0.0006,
+      friction: 0.3,
+      collisionFilter: { category: CAT_HEAD, mask: CAT_GROUND },
+      label: 'head',
+    });
+
+    // Suspension constraints: two per wheel for rotational stability.
+    this.rearAxle = Constraint.create({
+      bodyA: this.chassis,
+      pointA: { x: -32, y: 9 },
+      bodyB: this.rearWheel,
+      stiffness: 0.85,
+      damping: 0.2,
+      length: 0,
+    });
+    const rearAxle2 = Constraint.create({
+      bodyA: this.chassis,
+      pointA: { x: -28, y: 9 },
+      bodyB: this.rearWheel,
+      pointB: { x: -4, y: 0 },
+      stiffness: 0.6,
+      damping: 0.2,
+      length: 0,
+    });
+    this.frontAxle = Constraint.create({
+      bodyA: this.chassis,
+      pointA: { x: 32, y: 9 },
+      bodyB: this.frontWheel,
+      stiffness: 0.85,
+      damping: 0.2,
+      length: 0,
+    });
+    const frontAxle2 = Constraint.create({
+      bodyA: this.chassis,
+      pointA: { x: 28, y: 9 },
+      bodyB: this.frontWheel,
+      pointB: { x: 4, y: 0 },
+      stiffness: 0.6,
+      damping: 0.2,
+      length: 0,
+    });
+
+    this.headJoint = Constraint.create({
+      bodyA: this.chassis,
+      pointA: { x: 6, y: -26 },
+      bodyB: this.head,
+      stiffness: 0.95,
+      damping: 0.4,
+      length: 0,
+    });
+    const headJoint2 = Constraint.create({
+      bodyA: this.chassis,
+      pointA: { x: 14, y: -22 },
+      bodyB: this.head,
+      pointB: { x: 6, y: 4 },
+      stiffness: 0.85,
+      damping: 0.4,
+      length: 0,
+    });
+
+    this.composite = Composite.create({ label: 'bike' });
+    Composite.add(this.composite, [
+      this.chassis,
+      this.rearWheel,
+      this.frontWheel,
+      this.head,
+      this.rearAxle,
+      rearAxle2,
+      this.frontAxle,
+      frontAxle2,
+      this.headJoint,
+      headJoint2,
+    ]);
+
+    Composite.add(engine.world, this.composite);
+
+    Events.on(engine, 'collisionStart', this.onCollisionStart);
+    Events.on(engine, 'collisionEnd', this.onCollisionEnd);
+  }
+
+  private onCollisionStart = (event: Matter.IEventCollision<Matter.Engine>) => {
+    for (const pair of event.pairs) {
+      const a = pair.bodyA.label;
+      const b = pair.bodyB.label;
+      if (a === 'rearWheel' || b === 'rearWheel') this.rearOnGround = true;
+      if (a === 'frontWheel' || b === 'frontWheel') this.frontOnGround = true;
+      if (a === 'head' || b === 'head') this.crashed = true;
+    }
+  };
+
+  private onCollisionEnd = (event: Matter.IEventCollision<Matter.Engine>) => {
+    for (const pair of event.pairs) {
+      const a = pair.bodyA.label;
+      const b = pair.bodyB.label;
+      if (a === 'rearWheel' || b === 'rearWheel') this.rearOnGround = false;
+      if (a === 'frontWheel' || b === 'frontWheel') this.frontOnGround = false;
+    }
+  };
+
+  /** Run before Engine.update each tick. Applies forces from current input. */
+  applyInput(input: InputState, dtMs: number) {
+    if (this.crashed) return;
+    const dt = dtMs / 16.6667; // normalize to "frames at 60fps"
+    const inAir = !this.rearOnGround && !this.frontOnGround;
+
+    // Drive: torque on rear wheel for forward acceleration.
+    if (input.gas) {
+      const targetMaxAng = -0.45; // negative angular velocity = wheel spins forward (rolls right)
+      // Apply torque if we're below target (acts like throttle, naturally rev-limited).
+      if (this.rearWheel.angularVelocity > targetMaxAng) {
+        const force = 0.011 * dt;
+        Body.applyForce(this.rearWheel, this.rearWheel.position, { x: force, y: 0 });
+      }
+      // Slight forward push on chassis for feel.
+      Body.applyForce(this.chassis, this.chassis.position, { x: 0.0006 * dt, y: 0 });
+    }
+
+    // Brake: damp rear wheel rotation; slight reverse if held while stopped.
+    if (input.brake) {
+      Body.setAngularVelocity(this.rearWheel, this.rearWheel.angularVelocity * 0.85);
+      Body.setAngularVelocity(this.frontWheel, this.frontWheel.angularVelocity * 0.85);
+      if (Math.abs(this.chassis.velocity.x) < 0.4) {
+        Body.applyForce(this.chassis, this.chassis.position, { x: -0.0004 * dt, y: 0 });
+      }
+    }
+
+    // Lean: torque on chassis for wheelies / endos / mid-air rotation.
+    const leanTorque = inAir ? 0.018 : 0.012;
+    if (input.leanBack) {
+      this.chassis.torque -= leanTorque * dt;
+    }
+    if (input.leanFwd) {
+      this.chassis.torque += leanTorque * dt;
+    }
+
+    // Cap angular velocity so the bike doesn't spin out of control.
+    const cap = 0.35;
+    if (this.chassis.angularVelocity > cap) Body.setAngularVelocity(this.chassis, cap);
+    if (this.chassis.angularVelocity < -cap) Body.setAngularVelocity(this.chassis, -cap);
+  }
+
+  get position(): Vec2 {
+    return this.chassis.position;
+  }
+
+  get velocity(): Vec2 {
+    return this.chassis.velocity;
+  }
+
+  get angle(): number {
+    return this.chassis.angle;
+  }
+
+  /** Restart from spawn — re-create the composite for a clean state. */
+  destroy() {
+    Events.off(this.engine, 'collisionStart', this.onCollisionStart);
+    Events.off(this.engine, 'collisionEnd', this.onCollisionEnd);
+    Composite.remove(this.engine.world, this.composite);
+  }
+}

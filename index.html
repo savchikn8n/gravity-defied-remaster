@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f0a1f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Gravity Defied — Remaster</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game"></canvas>
+
+      <div id="menu" class="overlay">
+        <div class="menu-card">
+          <h1>GRAVITY DEFIED</h1>
+          <p class="subtitle">Remaster · prototype</p>
+          <div id="level-list"></div>
+          <p class="hint">Управление: <span class="kbd">↑</span> газ <span class="kbd">↓</span> тормоз <span class="kbd">←</span>/<span class="kbd">→</span> наклон <span class="kbd">R</span> рестарт</p>
+        </div>
+      </div>
+
+      <div id="hud" class="hud hidden">
+        <div class="hud-row">
+          <div class="hud-cell" id="hud-level">—</div>
+          <div class="hud-cell" id="hud-timer">00:00.00</div>
+        </div>
+        <button class="hud-btn" id="hud-back" aria-label="Меню">≡</button>
+      </div>
+
+      <div id="finish" class="overlay hidden">
+        <div class="menu-card">
+          <h2 id="finish-title">FINISH</h2>
+          <div class="finish-row"><span>Время:</span> <strong id="finish-time">—</strong></div>
+          <div class="finish-row"><span>Лучшее:</span> <strong id="finish-best">—</strong></div>
+          <div class="finish-actions">
+            <button class="btn primary" id="btn-restart">Заново</button>
+            <button class="btn" id="btn-next">Следующий</button>
+            <button class="btn" id="btn-tomenu">В меню</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="touch" class="touch hidden">
+        <div class="touch-side left">
+          <button class="touch-btn" data-act="leanBack" aria-label="Наклон назад">↶</button>
+          <button class="touch-btn" data-act="leanFwd" aria-label="Наклон вперёд">↷</button>
+        </div>
+        <div class="touch-side right">
+          <button class="touch-btn" data-act="brake" aria-label="Тормоз">▼</button>
+          <button class="touch-btn primary" data-act="gas" aria-label="Газ">▲</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

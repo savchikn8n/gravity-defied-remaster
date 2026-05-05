@@ -31,9 +31,12 @@ export class Bike {
   /** Half-length of chassis, for rendering. */
   readonly chassisHalf = { w: 42, h: 7 };
 
-  rearOnGround = false;
-  frontOnGround = false;
+  private rearContacts = 0;
+  private frontContacts = 0;
   crashed = false;
+
+  get rearOnGround() { return this.rearContacts > 0; }
+  get frontOnGround() { return this.frontContacts > 0; }
 
   constructor(cfg: BikeConfig, private engine: Matter.Engine) {
     const { x, y } = cfg.spawn;
@@ -143,9 +146,11 @@ export class Bike {
     for (const pair of event.pairs) {
       const a = pair.bodyA.label;
       const b = pair.bodyB.label;
-      if (a === 'rearWheel' || b === 'rearWheel') this.rearOnGround = true;
-      if (a === 'frontWheel' || b === 'frontWheel') this.frontOnGround = true;
+      if (a === 'rearWheel' || b === 'rearWheel') this.rearContacts++;
+      if (a === 'frontWheel' || b === 'frontWheel') this.frontContacts++;
       if (a === 'head' || b === 'head') this.crashed = true;
+      // Chassis hitting ground = the bike fell on its side, that's a crash.
+      if (a === 'chassis' || b === 'chassis') this.crashed = true;
     }
   };
 
@@ -153,49 +158,55 @@ export class Bike {
     for (const pair of event.pairs) {
       const a = pair.bodyA.label;
       const b = pair.bodyB.label;
-      if (a === 'rearWheel' || b === 'rearWheel') this.rearOnGround = false;
-      if (a === 'frontWheel' || b === 'frontWheel') this.frontOnGround = false;
+      if (a === 'rearWheel' || b === 'rearWheel') this.rearContacts = Math.max(0, this.rearContacts - 1);
+      if (a === 'frontWheel' || b === 'frontWheel') this.frontContacts = Math.max(0, this.frontContacts - 1);
     }
   };
 
   /** Run before Engine.update each tick. Applies forces from current input. */
   applyInput(input: InputState, dtMs: number) {
     if (this.crashed) return;
-    const dt = dtMs / 16.6667; // normalize to "frames at 60fps"
+    const dt = Math.min(2, dtMs / 16.6667); // normalize to "frames at 60fps", clamp on lag spikes
     const inAir = !this.rearOnGround && !this.frontOnGround;
 
-    // Drive: torque on rear wheel for forward acceleration.
+    // GAS: directly drive rear wheel angular velocity. Friction with ground
+    // converts spin to forward motion. Positive ω = wheel spins clockwise in
+    // y-down screen coords = bike rolls to the right. Cap acts as rev-limiter.
     if (input.gas) {
-      const targetMaxAng = -0.45; // negative angular velocity = wheel spins forward (rolls right)
-      // Apply torque if we're below target (acts like throttle, naturally rev-limited).
-      if (this.rearWheel.angularVelocity > targetMaxAng) {
-        const force = 0.011 * dt;
-        Body.applyForce(this.rearWheel, this.rearWheel.position, { x: force, y: 0 });
+      const maxAng = 0.62;
+      const accel = 0.022 * dt;
+      const target = Math.min(maxAng, this.rearWheel.angularVelocity + accel);
+      if (target > this.rearWheel.angularVelocity) {
+        Body.setAngularVelocity(this.rearWheel, target);
       }
-      // Slight forward push on chassis for feel.
-      Body.applyForce(this.chassis, this.chassis.position, { x: 0.0006 * dt, y: 0 });
     }
 
-    // Brake: damp rear wheel rotation; slight reverse if held while stopped.
+    // BRAKE: aggressive damping on both wheels; allow slow reverse creep when stopped.
     if (input.brake) {
-      Body.setAngularVelocity(this.rearWheel, this.rearWheel.angularVelocity * 0.85);
-      Body.setAngularVelocity(this.frontWheel, this.frontWheel.angularVelocity * 0.85);
-      if (Math.abs(this.chassis.velocity.x) < 0.4) {
-        Body.applyForce(this.chassis, this.chassis.position, { x: -0.0004 * dt, y: 0 });
+      const damp = Math.pow(0.86, dt);
+      Body.setAngularVelocity(this.rearWheel, this.rearWheel.angularVelocity * damp);
+      Body.setAngularVelocity(this.frontWheel, this.frontWheel.angularVelocity * damp);
+      if (Math.abs(this.chassis.velocity.x) < 0.45 && this.rearOnGround) {
+        // reverse creep
+        Body.setAngularVelocity(
+          this.rearWheel,
+          Math.max(-0.18, this.rearWheel.angularVelocity - 0.006 * dt),
+        );
       }
     }
 
-    // Lean: torque on chassis for wheelies / endos / mid-air rotation.
-    const leanTorque = inAir ? 0.018 : 0.012;
+    // LEAN: directly nudge chassis angular velocity for snappy, GD-like response.
+    // In matter.js with y-down, positive ω = clockwise = nose down (front lower).
+    const leanStep = inAir ? 0.0090 : 0.0055;
     if (input.leanBack) {
-      this.chassis.torque -= leanTorque * dt;
+      Body.setAngularVelocity(this.chassis, this.chassis.angularVelocity - leanStep * dt);
     }
     if (input.leanFwd) {
-      this.chassis.torque += leanTorque * dt;
+      Body.setAngularVelocity(this.chassis, this.chassis.angularVelocity + leanStep * dt);
     }
 
-    // Cap angular velocity so the bike doesn't spin out of control.
-    const cap = 0.35;
+    // Cap chassis spin so flips don't go infinite.
+    const cap = 0.34;
     if (this.chassis.angularVelocity > cap) Body.setAngularVelocity(this.chassis, cap);
     if (this.chassis.angularVelocity < -cap) Body.setAngularVelocity(this.chassis, -cap);
   }

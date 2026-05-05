@@ -163,6 +163,10 @@ export class Game {
   private render() {
     const { renderer, camera } = this;
     renderer.begin();
+
+    // Everything in the diegetic scene tilts together (sky, mountains, track, bike).
+    // The vignette stays unrotated so the screen frame is stable.
+    renderer.beginTilt();
     renderer.drawSky();
     renderer.drawParallax();
 
@@ -173,6 +177,7 @@ export class Game {
       if (this.bike) renderer.drawBike(this.bike);
       renderer.ctx.restore();
     }
+    renderer.endTilt();
 
     renderer.drawForeground();
   }

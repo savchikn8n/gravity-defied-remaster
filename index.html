@@ -45,12 +45,16 @@
 
       <div id="touch" class="touch hidden">
         <div class="touch-side left">
-          <button class="touch-btn" data-act="leanBack" aria-label="Наклон назад">↶</button>
-          <button class="touch-btn" data-act="leanFwd" aria-label="Наклон вперёд">↷</button>
+          <button class="touch-btn lean" data-act="leanBack" aria-label="Наклон назад">↶</button>
+          <button class="touch-btn lean" data-act="leanFwd" aria-label="Наклон вперёд">↷</button>
         </div>
         <div class="touch-side right">
-          <button class="touch-btn" data-act="brake" aria-label="Тормоз">▼</button>
-          <button class="touch-btn primary" data-act="gas" aria-label="Газ">▲</button>
+          <button class="touch-btn pedal pedal-brake" data-act="brake" aria-label="Тормоз / назад">
+            <span class="pedal-label">BRAKE</span>
+          </button>
+          <button class="touch-btn pedal pedal-gas" data-act="gas" aria-label="Газ">
+            <span class="pedal-label">GAS</span>
+          </button>
         </div>
       </div>
     </div>

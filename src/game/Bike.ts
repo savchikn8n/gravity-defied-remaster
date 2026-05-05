@@ -169,29 +169,63 @@ export class Bike {
     const dt = Math.min(2, dtMs / 16.6667); // normalize to "frames at 60fps", clamp on lag spikes
     const inAir = !this.rearOnGround && !this.frontOnGround;
 
-    // GAS: directly drive rear wheel angular velocity. Friction with ground
-    // converts spin to forward motion. Positive ω = wheel spins clockwise in
-    // y-down screen coords = bike rolls to the right. Cap acts as rev-limiter.
+    // GAS: torque-based drive with slip limit. The previous version directly
+    // overrode angular velocity, which made the wheel spin freely no matter what
+    // the chassis was doing → endless burnout when the bike couldn't move.
+    //
+    // Now: target angular velocity = (bike linear speed / wheel radius) + a small
+    // slip allowance. Wheel can't spin much faster than the bike's actual rolling
+    // speed, so any "extra" power converts into linear acceleration via friction.
+    // Both wheels drive (AWD): more grip on hills and in launches; rear is the
+    // dominant driver, front contributes less.
     if (input.gas) {
-      const maxAng = 0.62;
-      const accel = 0.022 * dt;
-      const target = Math.min(maxAng, this.rearWheel.angularVelocity + accel);
-      if (target > this.rearWheel.angularVelocity) {
-        Body.setAngularVelocity(this.rearWheel, target);
+      const slipMargin = 0.18;        // how much faster than rolling speed wheels may spin
+      const desiredFromSpeed = this.chassis.velocity.x / this.wheelR;
+      const target = Math.max(0.05, desiredFromSpeed + slipMargin);
+      const accelStep = 0.05 * dt;    // per-frame approach toward target
+
+      // Rear wheel (primary drive) — only when grounded so airborne revving
+      // doesn't pre-load infinite RPMs that burn out on landing.
+      if (this.rearOnGround) {
+        if (this.rearWheel.angularVelocity < target) {
+          Body.setAngularVelocity(
+            this.rearWheel,
+            Math.min(target, this.rearWheel.angularVelocity + accelStep),
+          );
+        }
+      }
+      // Front wheel (assist) — half the throttle authority, only on ground.
+      if (this.frontOnGround) {
+        const targetF = Math.max(0.05, desiredFromSpeed + slipMargin * 0.6);
+        if (this.frontWheel.angularVelocity < targetF) {
+          Body.setAngularVelocity(
+            this.frontWheel,
+            Math.min(targetF, this.frontWheel.angularVelocity + accelStep * 0.55),
+          );
+        }
       }
     }
 
-    // BRAKE: aggressive damping on both wheels; allow slow reverse creep when stopped.
+    // BRAKE / REVERSE: aggressive damping; slow reverse creep when stopped.
     if (input.brake) {
       const damp = Math.pow(0.86, dt);
       Body.setAngularVelocity(this.rearWheel, this.rearWheel.angularVelocity * damp);
       Body.setAngularVelocity(this.frontWheel, this.frontWheel.angularVelocity * damp);
-      if (Math.abs(this.chassis.velocity.x) < 0.45 && this.rearOnGround) {
-        // reverse creep
-        Body.setAngularVelocity(
-          this.rearWheel,
-          Math.max(-0.18, this.rearWheel.angularVelocity - 0.006 * dt),
-        );
+      // Reverse creep — drive both wheels backward, slip-limited like forward gas.
+      if (this.chassis.velocity.x < 0.6 && (this.rearOnGround || this.frontOnGround)) {
+        const revTarget = Math.min(-0.05, this.chassis.velocity.x / this.wheelR - 0.18);
+        if (this.rearOnGround && this.rearWheel.angularVelocity > revTarget) {
+          Body.setAngularVelocity(
+            this.rearWheel,
+            Math.max(revTarget, this.rearWheel.angularVelocity - 0.04 * dt),
+          );
+        }
+        if (this.frontOnGround && this.frontWheel.angularVelocity > revTarget) {
+          Body.setAngularVelocity(
+            this.frontWheel,
+            Math.max(revTarget, this.frontWheel.angularVelocity - 0.025 * dt),
+          );
+        }
       }
     }
 

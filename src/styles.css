@@ -253,6 +253,7 @@ html, body {
   bottom: max(env(safe-area-inset-bottom), 14px);
   display: flex;
   justify-content: space-between;
+  align-items: flex-end;
   padding: 0 14px;
   z-index: 6;
   pointer-events: none;
@@ -264,28 +265,132 @@ html, body {
   display: flex;
   gap: 12px;
   pointer-events: auto;
+  align-items: flex-end;
 }
 
+/* Reset baseline so each variant gets its own size & shape. */
 .touch-btn {
+  border: none;
+  background: none;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* Round lean buttons (corpus tilt) — unchanged behavior. */
+.touch-btn.lean {
   width: 64px;
   height: 64px;
   border-radius: 50%;
   border: 1px solid var(--card-border);
   background: rgba(20, 14, 38, 0.55);
-  color: var(--text);
   font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  -webkit-touch-callout: none;
 }
 
-.touch-btn.primary {
-  background: linear-gradient(180deg, rgba(255, 90, 60, 0.7), rgba(201, 56, 36, 0.7));
-}
-
-.touch-btn:active {
+.touch-btn.lean:active {
   transform: scale(0.93);
   background: rgba(255, 90, 60, 0.45);
+}
+
+/* ---------- pedals ---------- */
+/* Both pedals are elongated foot-pedal shapes with grip tread.
+   Brake is the bigger, more elongated one; gas is slightly smaller. */
+
+.touch-btn.pedal {
+  position: relative;
+  border-radius: 14px;
+  border: 1.5px solid #2c2c34;
+  background:
+    linear-gradient(180deg, rgba(60, 64, 72, 0.92), rgba(18, 20, 26, 0.95));
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.10),
+    inset 0 -8px 14px rgba(0, 0, 0, 0.55),
+    0 6px 14px rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 8px;
+  transition: transform 0.05s ease, box-shadow 0.08s ease, filter 0.08s ease;
+}
+
+/* Tread pattern — horizontal grippy ribs. */
+.touch-btn.pedal::before {
+  content: '';
+  position: absolute;
+  inset: 7px 7px 24px 7px;
+  border-radius: 8px;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.07) 0,
+      rgba(255, 255, 255, 0.07) 2px,
+      rgba(0, 0, 0, 0.25) 2px,
+      rgba(0, 0, 0, 0.25) 8px
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* Coloured edge stripe at the top — gas accent in orange, brake in red. */
+.touch-btn.pedal::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  pointer-events: none;
+}
+
+.pedal-gas {
+  width: 56px;
+  height: 110px;
+}
+
+.pedal-gas::after {
+  background: linear-gradient(180deg, #ffb24a, #ff7a2a);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pedal-brake {
+  width: 64px;
+  height: 140px;
+}
+
+.pedal-brake::after {
+  background: linear-gradient(180deg, #ff5a3c, #c93824);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.pedal-label {
+  position: relative;
+  z-index: 2;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
+}
+
+.pedal-gas .pedal-label { color: #ffd388; }
+.pedal-brake .pedal-label { color: #ff9a82; }
+
+.touch-btn.pedal:active {
+  transform: translateY(3px) scale(0.985);
+  filter: brightness(1.15);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.55),
+    0 2px 4px rgba(0, 0, 0, 0.45);
 }

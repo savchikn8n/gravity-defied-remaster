@@ -55,36 +55,23 @@ export class Renderer {
     ctx.clearRect(0, 0, this.width, this.height);
   }
 
-  /** Vertical sunset sky, screen-space. Overdraws to cover tilted corners. */
+  /** Flat off-white backdrop in classic GD style. Overdraws to cover tilt. */
   drawSky() {
     const { ctx, width, height } = this;
-    const m = 120; // overdraw margin to cover scene tilt
+    const m = 120;
+    // Subtle vertical wash so the page doesn't look too sterile, but stays light.
     const grad = ctx.createLinearGradient(0, -m, 0, height + m);
-    grad.addColorStop(0, '#0e0a24');
-    grad.addColorStop(0.45, '#3b1d4a');
-    grad.addColorStop(0.75, '#a83a52');
-    grad.addColorStop(1, '#f0a26a');
+    grad.addColorStop(0, '#f7f6ee');
+    grad.addColorStop(1, '#e8e6d8');
     ctx.fillStyle = grad;
-    ctx.fillRect(-m, -m, width + m * 2, height + m * 2);
-
-    // Sun glow
-    const cx = width * 0.72;
-    const cy = height * 0.62;
-    const r = Math.max(width, height) * 0.5;
-    const sun = ctx.createRadialGradient(cx, cy, 8, cx, cy, r);
-    sun.addColorStop(0, 'rgba(255, 220, 170, 0.8)');
-    sun.addColorStop(0.18, 'rgba(255, 150, 90, 0.25)');
-    sun.addColorStop(1, 'rgba(255, 150, 90, 0)');
-    ctx.fillStyle = sun;
     ctx.fillRect(-m, -m, width + m * 2, height + m * 2);
   }
 
-  /** Parallax mountain silhouettes. */
+  /** Distant hills as a faint silhouette layer behind the track. */
   drawParallax() {
     const { ctx, width, height, camera } = this;
-    this.drawMountainLayer(ctx, width, height, camera.pos.x * 0.08, height * 0.62, 'rgba(28, 18, 50, 0.85)', 220, 90, 0.6);
-    this.drawMountainLayer(ctx, width, height, camera.pos.x * 0.18, height * 0.7, 'rgba(40, 22, 60, 0.95)', 160, 70, 1.1);
-    this.drawMountainLayer(ctx, width, height, camera.pos.x * 0.32, height * 0.78, 'rgba(20, 12, 32, 1)', 110, 50, 1.7);
+    this.drawMountainLayer(ctx, width, height, camera.pos.x * 0.16, height * 0.72, 'rgba(170, 178, 158, 0.55)', 200, 60, 1.0);
+    this.drawMountainLayer(ctx, width, height, camera.pos.x * 0.28, height * 0.80, 'rgba(140, 152, 130, 0.75)', 130, 40, 1.6);
   }
 
   private drawMountainLayer(
@@ -98,16 +85,19 @@ export class Renderer {
     amp: number,
     freq: number,
   ) {
-    const m = 140; // overdraw margin: extend mountains beyond viewport for tilt
+    const m = 140;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(-m, h + m);
-    const step = 18;
+    // Bigger steps + quantization for an angular, polygonal silhouette.
+    const step = 60;
     for (let x = -m; x <= w + m; x += step) {
       const wx = x + offset;
-      const y = baseY
+      const raw = baseY
         - amp * (0.5 + 0.5 * Math.sin(wx / period))
         - amp * 0.35 * Math.sin(wx / (period * 0.4) * freq);
+      // Snap so vertices feel deliberate.
+      const y = Math.round(raw / 6) * 6;
       ctx.lineTo(x, y);
     }
     ctx.lineTo(w + m, h + m);
@@ -115,30 +105,42 @@ export class Renderer {
     ctx.fill();
   }
 
-  /** Draw the terrain polygon and topline. World-space. */
+  /** Draw terrain polygon and topline — flat white interior with bright green outline. */
   drawTrack(track: Track) {
     const { ctx } = this;
 
-    // Soft glow above the terrain edge
-    ctx.save();
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = 'rgba(255, 200, 140, 0.18)';
-    ctx.lineJoin = 'round';
-    ctx.stroke(track.topPath);
-    ctx.restore();
-
-    // Fill (dirt body)
-    const grad = ctx.createLinearGradient(0, track.bounds.minY - 20, 0, track.bounds.minY + 600);
-    grad.addColorStop(0, '#3a2748');
-    grad.addColorStop(0.4, '#251a35');
-    grad.addColorStop(1, '#0e0a1c');
-    ctx.fillStyle = grad;
+    // Filled body (slightly off-white so the silhouette reads on the backdrop)
+    ctx.fillStyle = '#ffffff';
     ctx.fill(track.fillPath);
 
-    // Top accent line (grass-like)
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = '#ff7a4a';
-    ctx.lineJoin = 'round';
+    // Subtle hatching to suggest "ground volume" without breaking the flat style
+    ctx.save();
+    ctx.clip(track.fillPath);
+    ctx.strokeStyle = 'rgba(80, 110, 70, 0.10)';
+    ctx.lineWidth = 1;
+    const minX = track.bounds.minX - 100;
+    const maxX = track.bounds.maxX + 100;
+    const minY = track.bounds.minY - 50;
+    const maxY = track.bounds.maxY + 800;
+    for (let y = minY; y < maxY; y += 16) {
+      ctx.beginPath();
+      ctx.moveTo(minX, y);
+      ctx.lineTo(maxX, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Sharp polygonal green outline (the GD signature)
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 8;
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = '#2f8a3e';
+    ctx.stroke(track.topPath);
+
+    // Inner darker line for a touch of depth
+    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = '#1f5a28';
     ctx.stroke(track.topPath);
 
     // Finish line
@@ -147,7 +149,6 @@ export class Renderer {
 
   private drawFinishLine(track: Track) {
     const { ctx } = this;
-    // Find approximate y at finishX by scanning track points
     const pts = track.points;
     let y = 0;
     for (let i = 0; i < pts.length - 1; i++) {
@@ -159,10 +160,10 @@ export class Renderer {
     }
     const x = track.finishX;
     const top = y - 220;
-    // Pole
-    ctx.fillStyle = '#dadada';
+    // Pole (dark grey reads well on light bg)
+    ctx.fillStyle = '#2a2a2e';
     ctx.fillRect(x - 2, top, 4, 220);
-    // Flag (checkered)
+    // Checkered flag
     const fw = 70, fh = 40;
     ctx.save();
     ctx.translate(x + 2, top);
@@ -172,11 +173,9 @@ export class Renderer {
         ctx.fillRect(col * (fw / 7), row * (fh / 4), fw / 7 + 1, fh / 4 + 1);
       }
     }
-    ctx.restore();
-    // Beam glow
-    ctx.save();
-    ctx.fillStyle = 'rgba(255, 220, 140, 0.10)';
-    ctx.fillRect(x - 18, y - 200, 36, 200);
+    ctx.strokeStyle = '#2a2a2e';
+    ctx.lineWidth = 0.8;
+    ctx.strokeRect(0, 0, fw, fh);
     ctx.restore();
   }
 
@@ -768,12 +767,12 @@ export class Renderer {
     ctx.closePath();
   }
 
-  /** Optional: subtle ground vignette and motion lines. */
+  /** Subtle screen-edge fade to keep the bright bg from feeling flat. */
   drawForeground() {
     const { ctx, width, height } = this;
-    const g = ctx.createRadialGradient(width / 2, height / 2, height * 0.35, width / 2, height / 2, height);
-    g.addColorStop(0, 'rgba(0,0,0,0)');
-    g.addColorStop(1, 'rgba(0,0,0,0.55)');
+    const g = ctx.createRadialGradient(width / 2, height / 2, height * 0.45, width / 2, height / 2, height * 1.1);
+    g.addColorStop(0, 'rgba(60, 70, 50, 0)');
+    g.addColorStop(1, 'rgba(60, 70, 50, 0.18)');
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, width, height);
   }

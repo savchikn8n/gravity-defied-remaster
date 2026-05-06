@@ -3,58 +3,170 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f0a1f" />
+    <meta name="theme-color" content="#f3f1e6" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <title>Gravity Defied — Remaster</title>
+    <title>Gravity Defied — Trial Racing</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="app">
       <canvas id="game"></canvas>
 
-      <div id="menu" class="overlay">
-        <div class="menu-card">
-          <h1>GRAVITY DEFIED</h1>
-          <p class="subtitle">Remaster · prototype</p>
-          <div id="level-list"></div>
-          <p class="hint">Управление: <span class="kbd">↑</span> газ <span class="kbd">↓</span> тормоз <span class="kbd">←</span>/<span class="kbd">→</span> наклон <span class="kbd">R</span> рестарт</p>
-        </div>
-      </div>
-
-      <div id="hud" class="hud hidden">
-        <div class="hud-row">
-          <div class="hud-cell" id="hud-level">—</div>
-          <div class="hud-cell" id="hud-timer">00:00.00</div>
-        </div>
-        <button class="hud-btn" id="hud-back" aria-label="Меню">≡</button>
-      </div>
-
-      <div id="finish" class="overlay hidden">
-        <div class="menu-card">
-          <h2 id="finish-title">FINISH</h2>
-          <div class="finish-row"><span>Время:</span> <strong id="finish-time">—</strong></div>
-          <div class="finish-row"><span>Лучшее:</span> <strong id="finish-best">—</strong></div>
-          <div class="finish-actions">
-            <button class="btn primary" id="btn-restart">Заново</button>
-            <button class="btn" id="btn-next">Следующий</button>
-            <button class="btn" id="btn-tomenu">В меню</button>
+      <!-- ============ MAIN MENU ============ -->
+      <div id="menu" class="screen">
+        <div class="screen-card">
+          <div class="screen-header">
+            <button class="icon-btn" data-nav="settings" aria-label="Настройки">⚙</button>
+            <span></span>
+            <button class="pill-btn" data-nav="leaderboard">♛ ЛИДЕРБОРД</button>
           </div>
+
+          <div class="logo-area">
+            <div class="logo-bike">
+              <svg viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- motion arc -->
+                <path d="M14 64 Q110 4 206 50" stroke="#161616" stroke-width="1.4" stroke-linecap="round" fill="none" stroke-dasharray="0" opacity="0.55"/>
+                <!-- bike silhouette -->
+                <g transform="translate(58 36)">
+                  <!-- rear wheel -->
+                  <circle cx="14" cy="44" r="14" fill="#161616"/>
+                  <circle cx="14" cy="44" r="6.5" fill="#ffffff"/>
+                  <circle cx="14" cy="44" r="2.5" fill="#161616"/>
+                  <!-- front wheel -->
+                  <circle cx="86" cy="44" r="14" fill="#161616"/>
+                  <circle cx="86" cy="44" r="6.5" fill="#ffffff"/>
+                  <circle cx="86" cy="44" r="2.5" fill="#161616"/>
+                  <!-- frame -->
+                  <path d="M14 44 L40 22 L70 22 L86 44 Z" fill="#161616"/>
+                  <!-- fork -->
+                  <path d="M86 44 L78 16" stroke="#161616" stroke-width="3" stroke-linecap="round"/>
+                  <!-- handlebar -->
+                  <path d="M70 14 L86 16" stroke="#161616" stroke-width="2.5" stroke-linecap="round"/>
+                  <!-- rider -->
+                  <path d="M40 22 Q48 0 64 4 L66 14 L48 18 Z" fill="#161616"/>
+                  <!-- helmet -->
+                  <circle cx="62" cy="-2" r="8" fill="#161616"/>
+                </g>
+              </svg>
+            </div>
+            <h1>Gravity Defied</h1>
+            <p class="tagline">Trial Racing</p>
+          </div>
+
+          <div class="menu-buttons">
+            <button class="big-btn" data-nav="play"><span class="icon">▶</span> ИГРАТЬ</button>
+            <button class="big-btn" data-nav="tracks"><span class="icon">♛</span> ТРАССЫ</button>
+            <button class="big-btn" data-nav="leaderboard"><span class="icon">♛</span> ЛИДЕРБОРД</button>
+            <button class="big-btn" data-nav="settings"><span class="icon">⚙</span> НАСТРОЙКИ</button>
+            <button class="big-btn" data-nav="exit"><span class="icon">⤳</span> ВЫХОД</button>
+          </div>
+
+          <div class="menu-social">
+            <button class="icon-btn" aria-label="Игры">◰</button>
+            <button class="icon-btn" aria-label="VK">VK</button>
+            <button class="icon-btn" aria-label="YouTube">▶</button>
+            <button class="icon-btn" aria-label="Звезда">★</button>
+          </div>
+
+          <div class="screen-mountains"></div>
         </div>
       </div>
 
-      <div id="touch" class="touch hidden">
-        <div class="touch-side left">
-          <button class="touch-btn lean" data-act="leanBack" aria-label="Наклон назад">↶</button>
-          <button class="touch-btn lean" data-act="leanFwd" aria-label="Наклон вперёд">↷</button>
+      <!-- ============ TRACKS ============ -->
+      <div id="tracks" class="screen hidden">
+        <div class="screen-card">
+          <div class="screen-header">
+            <button class="icon-btn" data-nav="menu" aria-label="Назад">←</button>
+            <h2>Выбор трассы</h2>
+            <span class="stars-count" id="tracks-stars">★ 0/15</span>
+          </div>
+
+          <div class="tracks-grid" id="tracks-grid"></div>
+
+          <div class="pagination">
+            <button class="icon-btn" aria-label="Пред." disabled style="opacity:.4">‹</button>
+            <div class="dots"><span class="dot active"></span></div>
+            <button class="icon-btn" aria-label="След." disabled style="opacity:.4">›</button>
+          </div>
+
+          <div class="screen-mountains"></div>
         </div>
-        <div class="touch-side right">
-          <button class="touch-btn pedal pedal-brake" data-act="brake" aria-label="Тормоз / назад">
-            <span class="pedal-label">BRAKE</span>
-          </button>
-          <button class="touch-btn pedal pedal-gas" data-act="gas" aria-label="Газ">
-            <span class="pedal-label">GAS</span>
-          </button>
+      </div>
+
+      <!-- ============ HUD (in-game) ============ -->
+      <div id="hud" class="hud hidden">
+        <div class="hud-top">
+          <button class="icon-btn" id="hud-pause" aria-label="Пауза">II</button>
+          <div class="hud-timer">
+            <div class="live" id="hud-time">0:00.00</div>
+            <div class="target" id="hud-target">★ 0:35.00</div>
+          </div>
+          <button class="icon-btn" id="hud-restart" aria-label="Рестарт">↺</button>
+          <div class="hud-score" id="hud-score">★ 0</div>
+        </div>
+        <div class="hud-bottom" id="hud-controls">
+          <button class="ctrl-btn" data-act="leanBack" aria-label="Наклон назад">←</button>
+          <button class="ctrl-btn" data-act="leanFwd" aria-label="Наклон вперёд">→</button>
+          <button class="ctrl-btn" data-act="brake" aria-label="Тормоз">◉</button>
+          <button class="ctrl-btn gas" data-act="gas" aria-label="Газ">▶</button>
+        </div>
+      </div>
+
+      <!-- ============ PAUSE ============ -->
+      <div id="pause" class="screen hidden">
+        <div class="screen-card">
+          <div class="screen-header">
+            <span></span>
+            <h2>ПАУЗА</h2>
+            <span></span>
+          </div>
+          <div class="pause-buttons">
+            <button class="big-btn" data-nav="resume"><span class="icon">▶</span> ПРОДОЛЖИТЬ</button>
+            <button class="big-btn" data-nav="restart"><span class="icon">↺</span> РЕСТАРТ</button>
+            <button class="big-btn" data-nav="tracks"><span class="icon">♛</span> ВЫЙТИ НА КАРТУ</button>
+            <button class="big-btn" data-nav="menu"><span class="icon">⌂</span> ГЛАВНОЕ МЕНЮ</button>
+          </div>
+          <div class="screen-mountains"></div>
+        </div>
+      </div>
+
+      <!-- ============ LEADERBOARD ============ -->
+      <div id="leaderboard" class="screen hidden">
+        <div class="screen-card">
+          <div class="screen-header">
+            <button class="icon-btn" data-nav="menu" aria-label="Назад">←</button>
+            <h2>Лидерборд</h2>
+            <span></span>
+          </div>
+          <div class="lb-tabs">
+            <button class="lb-tab active" data-lb-tab="global">Глобальный</button>
+            <button class="lb-tab" data-lb-tab="friends">Друзья</button>
+          </div>
+          <div class="lb-list" id="lb-list"></div>
+          <div class="screen-mountains"></div>
+        </div>
+      </div>
+
+      <!-- ============ FINISH ============ -->
+      <div id="finish" class="screen hidden">
+        <div class="screen-card">
+          <div class="screen-header">
+            <span></span>
+            <h2 id="finish-title">FINISH</h2>
+            <span></span>
+          </div>
+          <div style="padding:0 4px;">
+            <div class="finish-row"><span>Время:</span> <strong id="finish-time">—</strong></div>
+            <div class="finish-row"><span>Лучшее:</span> <strong id="finish-best">—</strong></div>
+          </div>
+          <div class="finish-actions">
+            <button class="big-btn" id="btn-restart"><span class="icon">↺</span> ЗАНОВО</button>
+            <button class="big-btn" id="btn-next"><span class="icon">→</span> СЛЕД.</button>
+            <button class="big-btn" id="btn-tomenu"><span class="icon">♛</span> ТРАССЫ</button>
+            <button class="big-btn" id="btn-tomain"><span class="icon">⌂</span> МЕНЮ</button>
+          </div>
+          <div class="screen-mountains"></div>
         </div>
       </div>
     </div>

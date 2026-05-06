@@ -1,12 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
 :root {
-  --bg-0: #0a0716;
-  --bg-1: #1a1230;
-  --accent: #ff5a3c;
-  --accent-2: #ffc26b;
-  --text: #f3eede;
-  --muted: #9aa0b4;
-  --card: rgba(20, 14, 38, 0.78);
-  --card-border: rgba(255, 255, 255, 0.08);
+  --bg: #f3f1e6;
+  --paper: #ffffff;
+  --ink: #161616;
+  --ink-soft: #5a5a5a;
+  --line: #161616;
+  --green: #2f8a3e;
+  --green-soft: #b9dcc0;
+  --green-bg: #e9f3ec;
+  --gray: #c8c8c0;
+  --gray-soft: #e8e6dd;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --radius-card: 28px;
+  --radius-btn: 14px;
 }
 
 * {
@@ -18,9 +25,9 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background: #000;
-  color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Space Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
@@ -43,354 +50,549 @@ html, body {
   touch-action: none;
 }
 
-/* ---------- overlays ---------- */
+/* ---------- screens (full-screen overlays) ---------- */
 
-.overlay {
+.screen {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, rgba(10, 7, 22, 0.4), rgba(10, 7, 22, 0.92));
+  z-index: 10;
+  background: var(--bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10;
-  padding: 24px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  padding: 12px;
 }
 
-.overlay.hidden { display: none; }
+.screen.hidden { display: none; }
 
-.menu-card {
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: 18px;
-  padding: 28px 28px 22px;
-  max-width: 480px;
+.screen-card {
   width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 460px;
+  height: 100%;
+  max-height: 920px;
+  background: var(--paper);
+  border-radius: var(--radius-card);
+  border: 1.5px solid var(--line);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
-.menu-card h1 {
-  margin: 0 0 4px;
-  font-size: 28px;
-  letter-spacing: 4px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.menu-card h2 {
-  margin: 0 0 12px;
-  font-size: 22px;
-  letter-spacing: 3px;
-  color: var(--accent-2);
-}
-
-.subtitle {
-  margin: 0 0 18px;
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.hint {
-  margin: 18px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.kbd {
-  display: inline-block;
-  padding: 1px 6px;
-  border: 1px solid var(--card-border);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 11px;
-  color: var(--text);
-}
-
-/* ---------- level list ---------- */
-
-#level-list {
+.screen-header {
   display: grid;
-  gap: 8px;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 14px 6px;
 }
 
-.level-row {
+.screen-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.screen-mountains {
+  height: 70px;
+  flex-shrink: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 460 70' preserveAspectRatio='none'><polyline points='0,68 22,46 48,32 78,52 110,28 142,46 175,22 210,42 245,18 280,48 315,32 348,50 380,28 412,42 442,30 460,40 460,70 0,70' fill='none' stroke='%232f8a3e' stroke-width='1.5' stroke-linejoin='miter'/></svg>");
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: 100% 100%;
+}
+
+/* ---------- buttons ---------- */
+
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  padding: 0;
+  transition: background 0.1s ease, transform 0.05s ease;
+}
+
+.icon-btn:hover { background: rgba(0, 0, 0, 0.04); }
+.icon-btn:active { transform: scale(0.95); background: var(--green-bg); }
+
+.pill-btn {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+}
+
+.pill-btn:active { background: var(--green-bg); }
+
+.big-btn {
+  height: 56px;
+  border-radius: var(--radius-btn);
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 22px;
+  font-family: inherit;
+  text-transform: uppercase;
+  transition: transform 0.06s ease, background 0.1s ease;
+  width: 100%;
+}
+
+.big-btn .icon {
+  width: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+}
+
+.big-btn:hover { background: rgba(0, 0, 0, 0.03); }
+.big-btn:active { transform: scale(0.98); background: var(--green-bg); }
+
+/* ---------- main menu ---------- */
+
+#menu .logo-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 24px 16px;
+  text-align: center;
+}
+
+.logo-bike {
+  width: 220px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-bike svg {
+  width: 100%;
+  height: 100%;
+}
+
+.logo-area h1 {
+  margin: 8px 0 0;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.logo-area .tagline {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 22px 14px;
+}
+
+.menu-social {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 22px 6px;
+}
+
+.menu-social .icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+/* ---------- tracks grid ---------- */
+
+#tracks .stars-count {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.tracks-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 6px 14px 12px;
+  overflow-y: auto;
+  align-content: start;
+}
+
+.track-card {
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 10px 12px 8px;
+  background: var(--paper);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-family: inherit;
+  text-align: left;
+  position: relative;
+  transition: transform 0.06s ease, background 0.1s ease;
+}
+
+.track-card:hover { background: rgba(0, 0, 0, 0.02); }
+.track-card:active { transform: scale(0.98); background: var(--green-bg); }
+
+.track-card.locked {
+  background: var(--gray-soft);
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.track-card.locked:hover { background: var(--gray-soft); }
+.track-card.locked:active { transform: none; background: var(--gray-soft); }
+
+.track-card .lv-num {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  letter-spacing: 1.5px;
+}
+
+.track-card .lv-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.track-card .lv-preview {
+  height: 64px;
+  margin: 4px 0 2px;
+  display: flex;
+  align-items: stretch;
+}
+
+.track-card .lv-preview svg {
+  width: 100%;
+  height: 100%;
+}
+
+.track-card .lv-best {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 1px;
+}
+
+.track-card .lv-lock {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+/* pagination — currently a single page; UI scaffolding kept for future. */
+.pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease;
+  padding: 4px 14px 12px;
+  gap: 8px;
 }
 
-.level-row:hover {
-  background: rgba(255, 90, 60, 0.12);
-  border-color: rgba(255, 90, 60, 0.4);
+.pagination .dots {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  justify-content: center;
 }
 
-.level-row:active { transform: scale(0.99); }
-
-.level-row .lv-name {
-  font-weight: 600;
-  letter-spacing: 0.5px;
+.pagination .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gray);
 }
 
-.level-row .lv-best {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: var(--muted);
-  font-size: 12px;
+.pagination .dot.active {
+  background: var(--green);
 }
-
-.level-row .lv-best.set { color: var(--accent-2); }
 
 /* ---------- HUD ---------- */
 
 .hud {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  padding: max(env(safe-area-inset-top), 12px) 14px 0;
+  inset: 0;
   z-index: 5;
   pointer-events: none;
 }
 
 .hud.hidden { display: none; }
 
-.hud-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.hud-cell {
-  background: rgba(10, 7, 22, 0.65);
-  border: 1px solid var(--card-border);
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 13px;
-  letter-spacing: 1px;
-  pointer-events: auto;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.hud-btn {
+.hud-top {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
-  width: 44px;
+  top: max(env(safe-area-inset-top), 12px);
+  left: 12px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.hud-top .icon-btn { pointer-events: auto; }
+
+.hud-timer {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 6px 14px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  pointer-events: auto;
+  line-height: 1.2;
+  justify-self: center;
+  min-width: 130px;
+}
+
+.hud-timer .live {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.hud-timer .target {
+  font-size: 10px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+
+.hud-score {
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  border-radius: 14px;
+  padding: 0 12px;
   height: 44px;
-  border-radius: 22px;
-  background: rgba(10, 7, 22, 0.65);
-  border: 1px solid var(--card-border);
-  color: var(--text);
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: auto;
+  letter-spacing: 1px;
+}
+
+.hud-bottom {
+  position: absolute;
+  bottom: max(env(safe-area-inset-bottom), 14px);
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 0 14px;
+  pointer-events: none;
+}
+
+.ctrl-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 700;
   cursor: pointer;
   pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background 0.08s ease, transform 0.06s ease;
 }
 
-/* ---------- finish ---------- */
+.ctrl-btn:active {
+  background: var(--green-bg);
+  transform: scale(0.96);
+}
+
+.ctrl-btn.gas {
+  background: var(--paper);
+}
+
+.ctrl-btn.gas:active {
+  background: var(--green-soft);
+}
+
+/* ---------- pause overlay ---------- */
+
+#pause {
+  background: rgba(243, 241, 230, 0.7);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+#pause .screen-card {
+  max-height: 580px;
+}
+
+#pause h2 {
+  text-align: center;
+  font-size: 20px;
+  letter-spacing: 4px;
+  margin: 24px 0 8px;
+}
+
+#pause .pause-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 22px;
+  flex: 1;
+  justify-content: center;
+}
+
+/* ---------- leaderboard ---------- */
+
+.lb-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 6px 14px;
+}
+
+.lb-tab {
+  flex: 1;
+  height: 40px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: uppercase;
+}
+
+.lb-tab.active {
+  background: var(--green-soft);
+}
+
+.lb-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lb-row.me {
+  background: var(--green-soft);
+}
+
+.lb-row .rank { text-align: center; }
+.lb-row .name { letter-spacing: 0.5px; }
+.lb-row .time { letter-spacing: 1px; }
+
+/* ---------- finish overlay (kept, restyled to match) ---------- */
+
+#finish {
+  background: rgba(243, 241, 230, 0.7);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+#finish .screen-card {
+  max-height: 480px;
+}
+
+#finish h2 {
+  text-align: center;
+  font-size: 22px;
+  letter-spacing: 4px;
+  margin: 24px 0 12px;
+}
 
 .finish-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--card-border);
-  font-size: 14px;
+  padding: 10px 0;
+  border-bottom: 1.5px solid var(--gray);
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin: 0 22px;
 }
 
 .finish-row strong {
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  color: var(--accent-2);
+  color: var(--green);
 }
 
 .finish-actions {
   display: flex;
   gap: 8px;
-  margin-top: 16px;
+  margin: 16px 22px 22px;
   flex-wrap: wrap;
 }
 
-.btn {
-  flex: 1 1 auto;
-  min-width: 100px;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--card-border);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-
-.btn:hover { background: rgba(255, 255, 255, 0.1); }
-
-.btn.primary {
-  background: linear-gradient(180deg, var(--accent), #c93824);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
-}
-
-/* ---------- touch controls ---------- */
-
-.touch {
-  position: absolute;
-  inset: auto 0 0 0;
-  bottom: max(env(safe-area-inset-bottom), 14px);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 14px;
-  z-index: 6;
-  pointer-events: none;
-}
-
-.touch.hidden { display: none; }
-
-.touch-side {
-  display: flex;
-  gap: 12px;
-  pointer-events: auto;
-  align-items: flex-end;
-}
-
-/* Reset baseline so each variant gets its own size & shape. */
-.touch-btn {
-  border: none;
-  background: none;
-  color: var(--text);
-  font-weight: 700;
-  cursor: pointer;
-  -webkit-touch-callout: none;
-  padding: 0;
-  font-family: inherit;
-}
-
-/* Round lean buttons (corpus tilt) — unchanged behavior. */
-.touch-btn.lean {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  border: 1px solid var(--card-border);
-  background: rgba(20, 14, 38, 0.55);
-  font-size: 20px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.touch-btn.lean:active {
-  transform: scale(0.93);
-  background: rgba(255, 90, 60, 0.45);
-}
-
-/* ---------- pedals ---------- */
-/* Both pedals are elongated foot-pedal shapes with grip tread.
-   Brake is the bigger, more elongated one; gas is slightly smaller. */
-
-.touch-btn.pedal {
-  position: relative;
-  border-radius: 14px;
-  border: 1.5px solid #2c2c34;
-  background:
-    linear-gradient(180deg, rgba(60, 64, 72, 0.92), rgba(18, 20, 26, 0.95));
-  box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.10),
-    inset 0 -8px 14px rgba(0, 0, 0, 0.55),
-    0 6px 14px rgba(0, 0, 0, 0.45),
-    0 1px 0 rgba(255, 255, 255, 0.06);
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 8px;
-  transition: transform 0.05s ease, box-shadow 0.08s ease, filter 0.08s ease;
-}
-
-/* Tread pattern — horizontal grippy ribs. */
-.touch-btn.pedal::before {
-  content: '';
-  position: absolute;
-  inset: 7px 7px 24px 7px;
-  border-radius: 8px;
-  background:
-    repeating-linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.07) 0,
-      rgba(255, 255, 255, 0.07) 2px,
-      rgba(0, 0, 0, 0.25) 2px,
-      rgba(0, 0, 0, 0.25) 8px
-    );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
-  pointer-events: none;
-}
-
-/* Coloured edge stripe at the top — gas accent in orange, brake in red. */
-.touch-btn.pedal::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  pointer-events: none;
-}
-
-.pedal-gas {
-  width: 56px;
-  height: 110px;
-}
-
-.pedal-gas::after {
-  background: linear-gradient(180deg, #ffb24a, #ff7a2a);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
-}
-
-.pedal-brake {
-  width: 64px;
-  height: 140px;
-}
-
-.pedal-brake::after {
-  background: linear-gradient(180deg, #ff5a3c, #c93824);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
-}
-
-.pedal-label {
-  position: relative;
-  z-index: 2;
-  font-size: 10px;
+.finish-actions .big-btn {
+  flex: 1 1 calc(50% - 4px);
+  height: 48px;
+  font-size: 12px;
   letter-spacing: 1.5px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.78);
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.6);
-}
-
-.pedal-gas .pedal-label { color: #ffd388; }
-.pedal-brake .pedal-label { color: #ff9a82; }
-
-.touch-btn.pedal:active {
-  transform: translateY(3px) scale(0.985);
-  filter: brightness(1.15);
-  box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.06),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.55),
-    0 2px 4px rgba(0, 0, 0, 0.45);
+  padding: 0 14px;
+  justify-content: center;
 }

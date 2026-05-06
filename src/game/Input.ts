@@ -60,9 +60,9 @@ export class Input {
   }
 
   private bindTouch() {
-    const root = document.getElementById('touch');
+    const root = document.getElementById('hud-controls');
     if (!root) return;
-    const buttons = root.querySelectorAll<HTMLButtonElement>('.touch-btn');
+    const buttons = root.querySelectorAll<HTMLButtonElement>('.ctrl-btn');
     buttons.forEach((btn) => {
       const act = btn.dataset.act as Action | undefined;
       if (!act) return;

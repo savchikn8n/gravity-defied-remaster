@@ -33,6 +33,7 @@ export class Game {
   private rafId = 0;
   private bestTimes: Map<string, number>;
   private finishLogged = false;
+  private pauseStartedAt: number | null = null;
 
   constructor(public canvas: HTMLCanvasElement, private cb: GameCallbacks) {
     this.engine = Engine.create({
@@ -69,6 +70,7 @@ export class Game {
     this.startTimeMs = performance.now();
     this.finishTimeMs = 0;
     this.finishLogged = false;
+    this.pauseStartedAt = null;
     this.state = 'playing';
     this.input.reset();
     this.ensureLoopRunning();
@@ -76,7 +78,32 @@ export class Game {
 
   toMenu() {
     this.state = 'menu';
+    this.pauseStartedAt = null;
     this.cleanup();
+  }
+
+  /** Suspend physics & timer without unloading the world. */
+  pause() {
+    if (this.state === 'playing' && this.pauseStartedAt == null) {
+      this.pauseStartedAt = performance.now();
+      this.input.reset();
+    }
+  }
+
+  /** Resume after pause(); shifts startTime so timer doesn't tick during pause. */
+  resume() {
+    if (this.pauseStartedAt != null) {
+      const now = performance.now();
+      const delta = now - this.pauseStartedAt;
+      this.startTimeMs += delta;
+      this.pauseStartedAt = null;
+      this.lastFrame = now;
+      this.accumulator = 0;
+    }
+  }
+
+  isPaused(): boolean {
+    return this.pauseStartedAt != null;
   }
 
   getBest(levelId: string): number | null {
@@ -109,7 +136,7 @@ export class Game {
     const frameTime = Math.min(now - this.lastFrame, 100);
     this.lastFrame = now;
 
-    if (this.state === 'playing') {
+    if (this.state === 'playing' && this.pauseStartedAt == null) {
       this.accumulator += frameTime;
       // Fixed-step physics for stability across devices.
       let steps = 0;

@@ -191,11 +191,12 @@ export class Game {
     const { renderer, camera } = this;
     renderer.begin();
 
-    // Everything in the diegetic scene tilts together (sky, mountains, track, bike).
-    // The vignette stays unrotated so the screen frame is stable.
+    // The diegetic scene (sky + track + bike) tilts together for the GD camera-
+    // on-an-angle feel. Parallax mountains intentionally skipped here — the
+    // mockup uses clean white sky, and the menu screens carry their own
+    // decorative mountain footers.
     renderer.beginTilt();
     renderer.drawSky();
-    renderer.drawParallax();
 
     if (this.track || this.bike) {
       renderer.ctx.save();

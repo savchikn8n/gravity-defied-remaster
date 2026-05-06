@@ -37,8 +37,11 @@ export class Renderer {
   }
 
   resize() {
-    const w = this.canvas.clientWidth;
-    const h = this.canvas.clientHeight;
+    // Fall back to window dimensions if the canvas hasn't been laid out yet —
+    // safer than reading 0 and sizing the canvas internal coords incorrectly,
+    // which would visually scale everything up.
+    const w = this.canvas.clientWidth || window.innerWidth;
+    const h = this.canvas.clientHeight || window.innerHeight;
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.width = w;
     this.height = h;

@@ -24,7 +24,12 @@ export class Camera {
     const lookAheadX = clamp(targetVel.x * 14, -160, 220);
     const lookAheadY = clamp(targetVel.y * 8, -90, 90);
     const desiredX = target.x + lookAheadX;
-    const desiredY = target.y - 60 + lookAheadY;
+    // Push the camera *up* in world coords (smaller y) so the bike appears
+    // in the upper-middle of the viewport with track visible below it.
+    // Offset is proportional to viewport height so it scales correctly on
+    // any device — equates to bike sitting ~32% from top.
+    const yOffset = this.viewportH * 0.18;
+    const desiredY = target.y - yOffset + lookAheadY;
     this.pos.x += (desiredX - this.pos.x) * this.smooth;
     this.pos.y += (desiredY - this.pos.y) * this.smooth * 0.7;
     this.zoom += (this.targetZoom - this.zoom) * 0.06;
@@ -33,7 +38,7 @@ export class Camera {
 
   snapTo(target: Vec2) {
     this.pos.x = target.x;
-    this.pos.y = target.y - 60;
+    this.pos.y = target.y - this.viewportH * 0.18;
     this.zoom = this.targetZoom;
     this.recalc();
   }
